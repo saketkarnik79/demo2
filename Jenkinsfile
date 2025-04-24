@@ -32,9 +32,11 @@ pipeline {
         success {
             echo 'Deployment is successfull'
         }
-    }
+    
         failure {
             echo 'Deployment is failed'
          }
+
+    }
 }
 
