@@ -12,7 +12,7 @@ pipeline {
         stage ('deploy to s3') {
             steps {
                 sh ''' 
-                   aws s3 sync . s3://${jenkins-static123}/  --region ${ap-south-1}--delete --acl public-read --exclude ".git/*" --exclude "Jenkinsfile"
+                   aws s3 sync . s3://${jenkins-static123}/  --region ${ap-south-1} --delete --acl public-read --exclude ".git/*" --exclude "Jenkinsfile"
                 '''
             }
         }
