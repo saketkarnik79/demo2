@@ -1,5 +1,5 @@
-FROM node:20-alpine
-WORKDIR /app
-COPY . .
-EXPOSE 8181
-CMD ["node", "index.html"]
+FROM nginx:alpine
+RUN rm -rf /usr/share/html/*
+COPY . /usr/share/html/
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
