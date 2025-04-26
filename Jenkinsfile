@@ -4,6 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1' // or whatever your region
         ECR_REPO = '905418203037.dkr.ecr.ap-south-1.amazonaws.com/frontend/village-app'
+        CONTAINER_NAME = "village-app"
     }
     
     stages {
@@ -26,6 +27,36 @@ pipeline {
                         docker tag village-app:${BUILD_NUMBER} $ECR_REPO:${BUILD_NUMBER}
                         docker push $ECR_REPO:${BUILD_NUMBER}
                     '''
+                }
+            }
+
+            stages ('stopping previous containers') {
+                steps {
+                    script {
+                        sh """
+
+                        if [\$(docker ps -q -f -name=${CONTAINER_NAME}) ]; then
+                            echo "stopping the running containers"
+                            docker stop ${CONTAINER_NAME}
+                            docker rm ${CONTAINER_NAME}
+                        elif [\$(docker ps -aq -f -name=${CONTAINER_NAME}) ]; then
+                            echo "checking non running containers"
+                            docker stop ${CONTAINER_NAME}
+
+                        else 
+                            echo "No existing container found."
+                        fi
+
+                        """
+                    }
+                }
+            }
+
+
+            stage (Docker Deploy) {
+                steps {
+                    docker pull $ECR_REPO:${env.BUILD_NUMBER}
+                    docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} $ECR_REPO:${BUILD_NUMBER}
                 }
             }
         }
