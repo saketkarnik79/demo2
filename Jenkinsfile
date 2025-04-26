@@ -1,11 +1,11 @@
 pipeline {
-    agent any 
-
+    agent any
+    
     environment {
-        IMAGE_NAME = "village-app"
-        CONTAINER_NAME = "village-app"
+        AWS_REGION = 'ap-south-1' // or whatever your region
+        ECR_REPO = '905418203037.dkr.ecr.ap-south-1.amazonaws.com/frontend/village-app'
     }
-
+    
     stages {
         stage('Checkout') {
             steps {
@@ -13,42 +13,63 @@ pipeline {
             }
         }
 
-        stage('Stop Previous Container') {
+        stage('Docker Build and Push') {
             steps {
-                script {
-                    sh """
-                    echo "Checking for existing container..."
-                    if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then 
-                        echo "Stopping and removing running container..."
-                        docker stop ${CONTAINER_NAME}
-                        docker rm ${CONTAINER_NAME}
-                    elif [ \$(docker ps -aq -f name=${CONTAINER_NAME}) ]; then
-                        echo "Container exists but not running — removing it..."
-                        docker rm ${CONTAINER_NAME}
-                    else 
-                        echo "No existing container found."
-                    fi
-                    """
-                }
-            }
-        }
+                withCredentials([usernamePassword(credentialsId: 'aws-jenkins-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                        # No need for aws configure now
+                        # AWS CLI automatically picks credentials from ENV
 
-        stage('Docker Build') {
-            steps {
-                script {
-                    docker.build("${IMAGE_NAME}:${BUILD_NUMBER}")
-                }
-            }
-        }
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
 
-        stage('Run New Container') {
-            steps {
-                script {
-                    sh """
-                    docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
-                    """
+                        docker build -t village-app:${BUILD_NUMBER} .
+                        docker tag village-app:${BUILD_NUMBER} $ECR_REPO:${BUILD_NUMBER}
+                        docker push $ECR_REPO:${BUILD_NUMBER}
+                    '''
                 }
             }
         }
     }
 }
+
+
+The below is a different approach with aws configure set in cli
+/*
+
+pipeline {
+    agent any
+    
+    environment {
+        AWS_REGION = 'ap-south-1' // Your region
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-jenkins-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                        aws configure set default.region $AWS_REGION
+
+                        # Now Docker build and push to ECR
+                        eval $(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin <your_account_id>.dkr.ecr.$AWS_REGION.amazonaws.com)
+
+                        docker build -t my-app .
+                        docker tag my-app:latest <your_account_id>.dkr.ecr.$AWS_REGION.amazonaws.com/my-app:latest
+                        docker push <your_account_id>.dkr.ecr.$AWS_REGION.amazonaws.com/my-app:latest
+                    '''
+                }
+            }
+        }
+    }
+}
+
+
+*/
