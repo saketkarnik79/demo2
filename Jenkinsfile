@@ -55,8 +55,8 @@ pipeline {
 
             stage (Docker Deploy) {
                 steps {
-                    docker pull $ECR_REPO:${BUILD_NUMBER}
-                    docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} $ECR_REPO:${BUILD_NUMBER}
+                    docker pull ${ECR_REPO}:${BUILD_NUMBER}
+                    docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} ${ECR_REPO}:${BUILD_NUMBER}
                 }
             }
         }
