@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker run -d -p 8181:80 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
+                    docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} ${IMAGE_NAME}:${BUILD_NUMBER}
                     """
                 }
             }
