@@ -33,8 +33,10 @@ pipeline {
 }
 
 
-The below is a different approach with aws configure set in cli
+
 /*
+
+The below is a different approach with aws configure set in cli
 
 pipeline {
     agent any
