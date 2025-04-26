@@ -30,18 +30,18 @@ pipeline {
                 }
             }
 
-            stages ('stopping previous containers') {
+            stage ('stopping previous containers') {
                 steps {
                     script {
                         sh """
 
-                        if [\$(docker ps -q -f -name=${CONTAINER_NAME}) ]; then
+                        if [ $(docker ps -q -f -name=${CONTAINER_NAME}) ]; then
                             echo "stopping the running containers"
                             docker stop ${CONTAINER_NAME}
                             docker rm ${CONTAINER_NAME}
-                        elif [\$(docker ps -aq -f -name=${CONTAINER_NAME}) ]; then
+                        elif [ $(docker ps -aq -f -name=${CONTAINER_NAME}) ]; then
                             echo "checking non running containers"
-                            docker stop ${CONTAINER_NAME}
+                            docker rm ${CONTAINER_NAME}
 
                         else 
                             echo "No existing container found."
@@ -55,8 +55,10 @@ pipeline {
 
             stage (Docker Deploy) {
                 steps {
+                    sh '''
                     docker pull ${ECR_REPO}:${BUILD_NUMBER}
                     docker run -d -p 8181:80 --restart unless-stopped --name ${CONTAINER_NAME} ${ECR_REPO}:${BUILD_NUMBER}
+                    '''
                 }
             }
         }
