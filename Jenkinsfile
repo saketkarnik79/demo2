@@ -15,7 +15,7 @@ pipeline {
 
         stage('Docker Build and Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-jenkins-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([usernamePassword(credentialsId: 'aws-jenkins-cred', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
                         # No need for aws configure now
                         # AWS CLI automatically picks credentials from ENV
