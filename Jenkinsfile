@@ -53,7 +53,7 @@ pipeline {
             }
 
 
-            stage (Docker Deploy) {
+            stage ('Docker Deploy') {
                 steps {
                     sh '''
                     docker pull ${ECR_REPO}:${BUILD_NUMBER}
