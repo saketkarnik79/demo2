@@ -35,11 +35,11 @@ pipeline {
                     script {
                         sh """
 
-                        if [ $(docker ps -q -f -name=${CONTAINER_NAME}) ]; then
+                        if [ \$(docker ps -q -f -name=${CONTAINER_NAME}) ]; then
                             echo "stopping the running containers"
                             docker stop ${CONTAINER_NAME}
                             docker rm ${CONTAINER_NAME}
-                        elif [ $(docker ps -aq -f -name=${CONTAINER_NAME}) ]; then
+                        elif [ \$(docker ps -aq -f -name=${CONTAINER_NAME}) ]; then
                             echo "checking non running containers"
                             docker rm ${CONTAINER_NAME}
 
