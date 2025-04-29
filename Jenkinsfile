@@ -36,7 +36,7 @@ pipeline {
                     passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                 )]) { 
                     script{
-                        if  {$env.BRANCH_NAME == 'development'} {
+                        if  {env.$BRANCH_NAME == 'development'} {
                             sh """
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
                             docker build -t village-app:${env.BRANCH_NMAE}-${BUILD_NUMBER} .
