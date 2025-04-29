@@ -24,7 +24,7 @@ pipeline {
             }
         }
 
-        stage('BUILD-DOCKER-IMAGE') {
+        stage('BUILD/DEPLOY') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'aws-jenkins-cred',
@@ -33,6 +33,8 @@ pipeline {
                 )]) { 
                     script {
                         if (env.BRANCH_NAME == 'development') {
+                            echo "Building and deploying Docker image for development"
+
                             sh """
                                 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
                                 docker build -t $IMAGE_NAME:${env.BRANCH_NAME}-${BUILD_NUMBER} .
@@ -40,12 +42,14 @@ pipeline {
                                 docker push $ECR_REPO:${env.BRANCH_NAME}-${BUILD_NUMBER}
                             """
                         } else if (env.BRANCH_NAME == 'staging') {
+                            echo "Syncing to S3 for staging"
                             sh """
                                 aws s3 sync . s3://jenkins-static123/ --region $AWS_REGION --delete --exclude ".git/*" --exclude "Jenkinsfile"
-                                echo "Deployed to S3"
                             """
+                        } else if (env.BRANCH_NAME == 'master') {
+                            echo "Master branch — no deployment configured"
                         } else {
-                            echo "${env.BRANCH_NAME} is not configured for deployment"
+                            echo "Branch ${env.BRANCH_NAME} is not configured for deployment"
                         }
                     }
                 }
@@ -72,7 +76,7 @@ pipeline {
             }
         }
 
-        stage('DEPLOY TO ENVIRONMENT') {
+        stage('RUN CONTAINER') {
             when {
                 expression { env.BRANCH_NAME == 'development' }
             }
@@ -86,10 +90,10 @@ pipeline {
 
     post {
         success {
-            echo "Deployment was successful"
+            echo "Deployment was successful for ${env.BRANCH_NAME}"
         }
         failure {
-            echo "Deployment failed"
+            echo "Deployment failed for ${env.BRANCH_NAME}"
         }
     }
 }
