@@ -20,12 +20,13 @@ pipeline {
     }
 
     stages {
-        stage ("checkout") {
-        checkout scmGit(
-        branches: [[name: "*/${params.BRANCH_NAME}"]],
-        userRemoteConfigs: [[url: 'https://github.com/your-repo.git']]
-        )
-    }
+        stage('Checkout') {
+            steps {
+                checkout([$class: 'GitSCM',
+                          branches: [[name: "*/${params.BRANCH}"]],
+                          userRemoteConfigs: [[url: 'https://github.com/DevOps-Topics/static-website-example.git']]])
+            }
+        }
         stage('Example') {
             steps {
                 echo "TAG: ${params.TAG}"
